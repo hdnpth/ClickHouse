@@ -1,5 +1,6 @@
 #!/usr/bin/env python
 
+from contextlib import contextmanager
 import logging
 import os
 from os import path as p
@@ -121,3 +122,13 @@ def get_job_id_url(job_name: str) -> Tuple[str, str, str]:
             )
 
     return job_id, job_url, job_api_url
+
+
+@contextmanager
+def cwd(path):
+    oldpwd = os.getcwd()
+    os.chdir(path)
+    try:
+        yield
+    finally:
+        os.chdir(oldpwd)
