@@ -397,7 +397,7 @@ public:
     void shrinkStoredBlocksToFit(size_t & total_bytes_in_join);
 
 private:
-    template<bool> friend class NotJoinedHash;
+    friend class NotJoinedHash;
 
     friend class JoinSource;
 
