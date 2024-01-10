@@ -32,6 +32,7 @@ from pathlib import Path
 from subprocess import CalledProcessError
 from typing import List, Optional
 
+import __main__
 from env_helper import TEMP_PATH
 from get_robot_token import get_best_robot_token
 from git_helper import git_runner, is_shallow
@@ -625,7 +626,7 @@ def stash():
     # diff.ignoreSubmodules=all don't show changed submodules
     need_stash = bool(git_runner("git -c diff.ignoreSubmodules=all diff HEAD"))
     if need_stash:
-        git_runner("git stash push --no-keep-index -m 'running cherry_pick.py'")
+        git_runner(f"git stash push --no-keep-index -m 'running {__main__.__file__}'")
     try:
         with clear_repo():
             yield
