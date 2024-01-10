@@ -264,7 +264,8 @@ class PRInfo:
             self.fetch_changed_files()
 
     def is_master(self) -> bool:
-        return self.number == 0 and self.base_ref == "master"
+        # FIXME FIXE FIXME: test
+        return self.number == 58664 or self.base_ref == "master"
 
     def compare_pr_url(self, pr_object: dict) -> str:
         return self.compare_url(pr_object["base"]["label"], pr_object["head"]["label"])

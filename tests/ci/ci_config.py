@@ -72,18 +72,26 @@ class LabelConfig:
 class JobConfig:
     """
     contains config parameter relevant for job execution in CI workflow
-    @digest - configures digest calculation for the job
-    @run_command - will be triggered for the job if omited in CI workflow yml
     @timeout
-    @num_batches - sets number of batches for multi-batch job
     """
 
+    # configures digest calculation for the job
     digest: DigestConfig = field(default_factory=DigestConfig)
+    # will be triggered for the job if omited in CI workflow yml
     run_command: str = ""
+    # job timeout
     timeout: Optional[int] = None
+    # sets number of batches for multi-batch job
     num_batches: int = 1
+    # label that enables job in CI, if set digest won't be used
     run_by_label: str = ""
+    # to run always regardless of the job digest or/and label
     run_always: bool = False
+    # if the job needs to be run on the main branch (e.g. building packages).
+    # NOTE: Subsequent runs with the similar digest are still considered skippable regardless of the branch.
+    required_on_master: bool = False
+    # completly turn off the job for the master branch
+    disabled_on_master: bool = False
 
 
 @dataclass
@@ -100,6 +108,7 @@ class BuildConfig:
     static_binary_name: str = ""
     job_config: JobConfig = field(
         default_factory=lambda: JobConfig(
+            required_on_master=True,
             digest=DigestConfig(
                 include_paths=[
                     "./src",
@@ -641,13 +650,14 @@ CI_CONFIG = CiConfig(
         JobNames.DOCKER_SERVER.value: TestConfig(
             "",
             job_config=JobConfig(
+                required_on_master=True,
                 digest=DigestConfig(
                     include_paths=[
                         "tests/ci/docker_server.py",
                         "./docker/server",
                         "./docker/keeper",
                     ]
-                )
+                ),
             ),
         ),
         "Docs check": TestConfig(
@@ -662,11 +672,12 @@ CI_CONFIG = CiConfig(
         JobNames.FAST_TEST.value: TestConfig(
             "",
             job_config=JobConfig(
+                disabled_on_master=True,
                 digest=DigestConfig(
                     include_paths=["./tests/queries/0_stateless/"],
                     exclude_files=[".md"],
                     docker=["clickhouse/fasttest"],
-                )
+                ),
             ),
         ),
         JobNames.STYLE_CHECK.value: TestConfig(
@@ -833,10 +844,16 @@ CI_CONFIG = CiConfig(
             "package_asan", job_config=JobConfig(**integration_test_common_params)  # type: ignore
         ),
         "Compatibility check (amd64)": TestConfig(
-            "package_release", job_config=JobConfig(digest=compatibility_check_digest)
+            "package_release",
+            job_config=JobConfig(
+                required_on_master=True, digest=compatibility_check_digest
+            ),
         ),
         "Compatibility check (aarch64)": TestConfig(
-            "package_aarch64", job_config=JobConfig(digest=compatibility_check_digest)
+            "package_aarch64",
+            job_config=JobConfig(
+                required_on_master=True, digest=compatibility_check_digest
+            ),
         ),
         JobNames.UNIT_TEST.value: TestConfig(
             "binary_release", job_config=JobConfig(**unit_test_common_params)  # type: ignore
